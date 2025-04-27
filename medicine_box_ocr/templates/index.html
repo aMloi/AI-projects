@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medicine Box OCR</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Medicine Box OCR</h1>
+        <p>Upload an image of a medicine box to extract and view detailed information about the medicine.</p>
+        <form id="upload-form" enctype="multipart/form-data">
+            <input type="file" id="image-input" name="image" accept="image/*" required>
+            <button type="submit">Upload and Extract</button>
+        </form>
+        <div id="result" class="result">
+            <h2>Result</h2>
+            <p id="medicine-name">No image uploaded yet.</p>
+            <div id="medicine-info" class="medicine-info">
+                <h3>Medicine Information</h3>
+                <p><strong>Description:</strong> <span id="description">N/A</span></p>
+                <p><strong>Side Effects:</strong> <span id="side-effects">N/A</span></p>
+                <p><strong>Generic Alternatives:</strong> <span id="alternatives">N/A</span></p>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.getElementById('upload-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData();
+            const imageInput = document.getElementById('image-input');
+            formData.append('image', imageInput.files[0]);
+
+            try {
+                const response = await fetch('/ocr', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                const nameElement = document.getElementById('medicine-name');
+                const descElement = document.getElementById('description');
+                const sideEffectsElement = document.getElementById('side-effects');
+                const alternativesElement = document.getElementById('alternatives');
+
+                if (data.error) {
+                    nameElement.textContent = `Error: ${data.error}`;
+                    descElement.textContent = 'N/A';
+                    sideEffectsElement.textContent = 'N/A';
+                    alternativesElement.textContent = 'N/A';
+                } else {
+                    nameElement.textContent = `Medicine Name: ${data.name}`;
+                    descElement.textContent = data.description;
+                    sideEffectsElement.textContent = data.side_effects.join(', ');
+                    alternativesElement.textContent = data.alternatives.join(', ');
+                }
+            } catch (error) {
+                document.getElementById('medicine-name').textContent = 'Error: Failed to process image.';
+                document.getElementById('description').textContent = 'N/A';
+                document.getElementById('side-effects').textContent = 'N/A';
+                document.getElementById('alternatives').textContent = 'N/A';
+            }
+        });
+    </script>
+</body>
+</html>
